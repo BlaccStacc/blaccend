@@ -2,7 +2,7 @@ package db
 
 import (
     "database/sql"
-    _ "github.com/jackc/pgx/v5/stdlib"
+    _ "github.com/jackc/pgx/v5/stdlib" // _ = import only for side-effects = import doar ca sa trigger init() din acel pachet, nu pt functii
     "github.com/BlaccStacc/blaccend/internal/config"
 )
 
