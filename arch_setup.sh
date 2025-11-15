@@ -1,56 +1,47 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-echo "=== Updating system ==="
+echo "=== Updating system (pacman -Syu) ==="
 sudo pacman -Syu --noconfirm
 
-echo "=== Installing PostgreSQL ==="
-sudo pacman -S --noconfirm postgresql
+echo "=== Installing Docker, Docker Compose, buildx, git ==="
+sudo pacman -S --noconfirm docker docker-compose docker-buildx git
 
-echo "=== Initialize PostgreSQL database cluster (if not done yet) ==="
-sudo -iu postgres initdb --locale $LANG -D /var/lib/postgres/data || true
+echo "=== Enabling and starting Docker service ==="
+sudo systemctl enable --now docker.service
 
-echo "=== Starting PostgreSQL ==="
-sudo systemctl enable --now postgresql
+# Add current user to docker group
+if ! getent group docker >/dev/null 2>&1; then
+  sudo groupadd docker
+fi
 
-echo "=== Creating database, user, and table ==="
-sudo -i -u postgres psql <<EOF
--- Create database
-CREATE DATABASE firstdb;
+echo "=== Adding user '$USER' to 'docker' group ==="
+sudo gpasswd -a "$USER" docker
 
--- Create user
-CREATE USER admin WITH PASSWORD 'admin';
+echo
+echo "=== Docker installation complete ==="
+docker --version || true
+# On Arch, docker-compose v1 is 'docker-compose', but you can still use it
+docker-compose --version || true
 
--- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE firstdb TO admin;
+if [ -f docker-compose.yml ]; then
+  echo
+  echo "=== Starting project with: docker compose up -d --build (or docker-compose up -d) ==="
+  # Prefer the modern CLI if available
+  if docker compose version >/dev/null 2>&1; then
+    docker compose up -d --build
+  else
+    docker-compose up -d --build
+  fi
+else
+  echo
+  echo "No docker-compose.yml found in current directory."
+  echo "Run this script from the project root, or start later with:"
+  echo "  docker compose up -d --build"
+  echo "or (if only v1 is available):"
+  echo "  docker-compose up -d --build"
+fi
 
--- Ensure the public schema is owned by admin
-\c firstdb
-ALTER SCHEMA public OWNER TO admin;
-
--- Create a simple users table
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    username TEXT NOT NULL,
-    email TEXT NOT NULL
-);
-
--- Insert example users
-INSERT INTO users (username, email) VALUES
-('alice', 'alice@example.com'),
-('bob', 'bob@example.com'),
-('carol', 'carol@example.com');
-\q
-EOF
-
-echo "=== Installing Go ==="
-sudo pacman -S --noconfirm go
-
-echo "=== Installing git ==="
-sudo pacman -S --noconfirm git
-
-echo "=== Setup complete ==="
-echo "Database: firstdb"
-echo "User: admin / Password: admin"
-echo "Example users: alice, bob, carol"
-echo "Go version: $(go version)"
+echo
+echo "IMPORTANT: Log out and log back in (or 'newgrp docker') so the docker group applies."
+echo "After that, 'docker ps' should work without sudo."

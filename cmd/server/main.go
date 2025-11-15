@@ -1,12 +1,12 @@
 package main
 
 import (
-    "log"
-	
-    "github.com/gofiber/fiber/v2"
-    "github.com/BlaccStacc/blaccend/internal/api"
-    "github.com/BlaccStacc/blaccend/internal/config"
-    "github.com/BlaccStacc/blaccend/internal/db"
+	"log"
+
+	"github.com/BlaccStacc/blaccend/internal/api"
+	"github.com/BlaccStacc/blaccend/internal/config"
+	"github.com/BlaccStacc/blaccend/internal/db"
+	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
@@ -19,7 +19,6 @@ func main() {
 	}
 	defer database.Close() // defer schedules a func to run after the surrounding func returns, no matter how
 	//basically defer runs last
-
 
 	// create fiber app ce pula mea e fiber- web framework pt go gen un fel de node.js lolz
 	app := fiber.New()

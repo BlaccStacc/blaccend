@@ -1,53 +1,55 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-echo "=== Updating system ==="
+echo "=== Updating system packages ==="
 sudo apt update && sudo apt upgrade -y
 
-echo "=== Installing PostgreSQL ==="
-sudo apt install -y postgresql postgresql-contrib
+echo "=== Installing base tools (ca-certificates, curl, gnupg, git) ==="
+sudo apt install -y ca-certificates curl gnupg lsb-release git
 
-echo "=== Starting PostgreSQL ==="
-sudo systemctl enable --now postgresql
+echo "=== Setting up Docker apt repository ==="
+sudo install -m 0755 -d /etc/apt/keyrings
+if [ ! -f /etc/apt/keyrings/docker.gpg ]; then
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+    | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+fi
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-echo "=== Creating database and user ==="
-sudo -i -u postgres psql <<EOF
--- Create database
-CREATE DATABASE firstdb;
+echo "=== Installing Docker Engine + Compose plugin ==="
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
--- Create user
-CREATE USER admin WITH PASSWORD 'admin';
+echo "=== Enabling Docker service ==="
+sudo systemctl enable --now docker
 
--- Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE firstdb TO admin;
+# Add current user to docker group (so you can run `docker` without sudo)
+if ! getent group docker >/dev/null 2>&1; then
+  sudo groupadd docker
+fi
 
--- Ensure the public schema is owned by admin
-ALTER SCHEMA public OWNER TO admin;
+echo "=== Adding user '$USER' to 'docker' group ==="
+sudo usermod -aG docker "$USER"
 
--- Create a simple users table
-\c firstdb
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    username TEXT NOT NULL,
-    email TEXT NOT NULL
-);
+echo
+echo "=== Docker installation complete ==="
+docker --version || true
+docker compose version || true
 
--- Insert example users
-INSERT INTO users (username, email) VALUES
-('alice', 'alice@example.com'),
-('bob', 'bob@example.com'),
-('carol', 'carol@example.com');
-\q
-EOF
+if [ -f docker-compose.yml ]; then
+  echo
+  echo "=== Starting project with: docker compose up -d --build ==="
+  docker compose up -d --build
+else
+  echo
+  echo "No docker-compose.yml found in current directory."
+  echo "Run this script from the project root, or start later with:"
+  echo "  docker compose up -d --build"
+fi
 
-echo "=== Installing Go ==="
-sudo apt install -y golang
-
-echo "=== Installing git ==="
-sudo apt install -y git
-
-echo "=== Setup complete ==="
-echo "Database: firstdb"
-echo "User: admin / Password: admin"
-echo "Example users: alice, bob, carol"
-echo "Go version: $(go version)"
+echo
+echo "IMPORTANT: Log out and log back in so group changes take effect (docker group)."
+echo "After relogin you should be able to run 'docker ps' without sudo."

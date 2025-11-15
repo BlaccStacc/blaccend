@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: firstdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./internal/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5433:5432"   # or 5432:5432 if no conflict
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: admin
+      DB_PASS: admin
+      DB_NAME: firstdb
+      APP_PORT: 8080
+    ports:
+      - "8080:8080"
+    restart: always
+
+volumes:
+  pgdata:
