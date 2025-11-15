@@ -12,7 +12,7 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./internal/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
-      - "5433:5432"   # or 5432:5432 if no conflict
+      - "5433:5432"  
 
   api:
     build:
