@@ -8,7 +8,7 @@ import (
 
 func GenerateTOTPSecret() (string, error) {
 	secret, err := totp.Generate(totp.GenerateOpts{
-		Issuer:      "Blaccned", //to change??
+		Issuer:      "Blaccend", //to change??
 		AccountName: "",
 	})
 	if err != nil {

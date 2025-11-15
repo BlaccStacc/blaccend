@@ -1,30 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== Updating system packages ==="
-sudo apt update && sudo apt upgrade -y
+# echo "=== Updating system packages ==="
+# sudo apt update && sudo apt upgrade -y
 
-echo "=== Installing base tools (ca-certificates, curl, gnupg, git) ==="
-sudo apt install -y ca-certificates curl gnupg lsb-release git
+# echo "=== Installing base tools (ca-certificates, curl, gnupg, git) ==="
+# sudo apt install -y ca-certificates curl gnupg lsb-release git
 
-echo "=== Setting up Docker apt repository ==="
-sudo install -m 0755 -d /etc/apt/keyrings
-if [ ! -f /etc/apt/keyrings/docker.gpg ]; then
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
-    | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-fi
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-  https://download.docker.com/linux/ubuntu \
-  $(lsb_release -cs) stable" \
-  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# echo "=== Setting up Docker apt repository ==="
+# sudo install -m 0755 -d /etc/apt/keyrings
+# if [ ! -f /etc/apt/keyrings/docker.gpg ]; then
+#   curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+#     | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+# fi
+# echo \
+#   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+#   https://download.docker.com/linux/ubuntu \
+#   $(lsb_release -cs) stable" \
+#   | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-echo "=== Installing Docker Engine + Compose plugin ==="
-sudo apt update
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+# echo "=== Installing Docker Engine + Compose plugin ==="
+# sudo apt update
+# sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-echo "=== Enabling Docker service ==="
-sudo systemctl enable --now docker
+# echo "=== Enabling Docker service ==="
+# sudo systemctl enable --now docker
 
 # Add current user to docker group (so you can run `docker` without sudo)
 if ! getent group docker >/dev/null 2>&1; then
