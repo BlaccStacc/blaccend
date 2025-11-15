@@ -31,8 +31,12 @@ func (m *Mailer) Send(to string, subject string, htmlBody string) error {
 
 func SendVerificationEmail(to, token string) error {
 
+	return nil
+
 }
 
 func SendPasswordResetEmail(to, token string) error {
+
+	return nil
 
 }

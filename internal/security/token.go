@@ -6,12 +6,10 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-
-	"github.com/BlaccStacc/blaccend/internal/security"
 )
 
 func NewRandomToken(nBytes int) (string, error) {
-	b, err := security.NewRandomBytes(nBytes)
+	b, err := NewRandomBytes(nBytes)
 	if err != nil {
 		return "", err
 	}
@@ -19,7 +17,7 @@ func NewRandomToken(nBytes int) (string, error) {
 }
 
 func NewURLSafeToken(nBytes int) (string, error) {
-	b, err := security.NewRandomBytes(nBytes)
+	b, err := NewRandomBytes(nBytes)
 	if err != nil {
 		return "", err
 	}
@@ -31,7 +29,7 @@ func NewNumericCode(length int) (string, error) {
 		return "", fmt.Errorf("invalid length")
 	}
 
-	b, err := security.NewRandomBytes(length)
+	b, err := NewRandomBytes(length)
 	if err != nil {
 		return "", err
 	}

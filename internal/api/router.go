@@ -18,5 +18,8 @@ func RegisterRoutes(app *fiber.App, db *sql.DB) {
 
 	app.Get("/users/:id", GetUser(db))
 
-	//app.Get("/auth")
+	app.Get("/auth/register", RegisterHandler(db))
+	app.Get("/auth/login", LoginHandler(db))
+	app.Get("/auth/login/2fa", Login2FAHandler(db))
+	app.Get("/auth/me", MeHandler())
 }

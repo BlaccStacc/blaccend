@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/BlaccStacc/blaccend/internal/security"
+	//"github.com/BlaccStacc/blaccend/internal/security"
 	"golang.org/x/crypto/argon2"
 )
 
@@ -20,7 +20,7 @@ const (
 )
 
 func HashPassword(password string) (string, error) {
-	salt, err := security.NewRandomBytes(16)
+	salt, err := NewRandomBytes(16)
 	if err != nil {
 		return "", err
 	}
