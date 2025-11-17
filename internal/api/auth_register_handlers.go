@@ -44,11 +44,6 @@ func RegisterHandler(db *sql.DB) fiber.Handler {
 			return c.Status(500).JSON(fiber.Map{"error": "password hashing failed"})
 		}
 
-		emailHash, err := security.HashPassword(body.Email)
-		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"error": "email hashing failed"})
-		}
-
 		verifyToken, err := security.NewRandomToken(32)
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": "token error"})
@@ -57,10 +52,10 @@ func RegisterHandler(db *sql.DB) fiber.Handler {
 
 		var id int64
 		err = db.QueryRow(`
-			INSERT INTO users (username, email_hash, password_hash, email_verified, verify_token, verify_expires_at, date_registered)
+			INSERT INTO users (username, email, password_hash, email_verified, verify_token, verify_expires_at, date_registered)
 			VALUES ($1, $2, $3, FALSE, $4, $5, $6)
 			RETURNING id
-		`, body.Username, emailHash, passwordHash, verifyToken, verifyExpires, time.Now().UTC()).Scan(&id)
+		`, body.Username, body.Email, passwordHash, verifyToken, verifyExpires, time.Now().UTC()).Scan(&id)
 		if err != nil {
 			return c.Status(400).JSON(fiber.Map{"error": "could not create user"})
 		}
