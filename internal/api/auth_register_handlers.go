@@ -22,6 +22,14 @@ func RegisterHandler(db *sql.DB) fiber.Handler {
 			return c.Status(400).JSON(fiber.Map{"error": "email and password required"})
 		}
 
+		var exists bool
+		if err := db.QueryRow(`SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`, body.Email).Scan(&exists); err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": "db error"})
+		}
+		if exists {
+			return c.Status(409).JSON(fiber.Map{"error": "email already registered"})
+		}
+
 		passwordHash, err := security.HashPassword(body.Password)
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": "hashing failed"})

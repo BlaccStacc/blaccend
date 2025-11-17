@@ -8,7 +8,6 @@ import (
 )
 
 func RegisterRoutes(app *fiber.App, db *sql.DB) {
-	// CORS so the React app (5173) can talk to backend (8080)
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "http://localhost:5173",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
@@ -16,21 +15,23 @@ func RegisterRoutes(app *fiber.App, db *sql.DB) {
 	}))
 
 	app.Get("/health", GetHealth)
-
 	app.Get("/hello", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"message": "hello",
-		})
+		return c.JSON(fiber.Map{"message": "hello"})
 	})
 
 	app.Get("/users/:id", GetUser(db))
 
-	// AUTH: these must be POST, not GET
+	// AUTH
 	app.Post("/auth/register", RegisterHandler(db))
-	app.Post("/auth/login", LoginHandler(db))
-	app.Post("/auth/login/2fa", Login2FAHandler(db))
-
-	// /auth/me is a GET (used by frontend to fetch current user)
-	app.Get("/auth/me", MeHandler())
+	app.Post("/auth/login", LoginHandler(db))        // step 1 login
+	app.Post("/auth/login/2fa", Login2FAHandler(db)) // step 2 login with TOTP
 	app.Get("/auth/verify-email", VerifyEmailHandler(db))
+
+	// AUTHENTICATED ROUTES
+	protected := app.Group("", AuthMiddleware()) // require JWT
+	protected.Get("/auth/me", MeHandler())
+
+	// 🔹 NEW FOR TOTP SETUP (authenticator app)
+	protected.Get("/auth/2fa/setup", TwoFASetupHandler(db))
+	protected.Post("/auth/2fa/confirm", TwoFAConfirmHandler(db))
 }
