@@ -18,12 +18,21 @@ func RegisterHandler(db *sql.DB) fiber.Handler {
 		if err := c.BodyParser(&body); err != nil {
 			return c.Status(400).JSON(fiber.Map{"error": "invalid body"})
 		}
+
 		if body.Email == "" || body.Password == "" {
 			return c.Status(400).JSON(fiber.Map{"error": "email and password required"})
 		}
 
+		// 🔐 NEW: password strength check
+		if err := security.ValidatePasswordStrength(body.Password); err != nil {
+			return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+		}
+
 		var exists bool
-		if err := db.QueryRow(`SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`, body.Email).Scan(&exists); err != nil {
+		if err := db.QueryRow(
+			`SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`,
+			body.Email,
+		).Scan(&exists); err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": "db error"})
 		}
 		if exists {
@@ -48,7 +57,6 @@ func RegisterHandler(db *sql.DB) fiber.Handler {
 			RETURNING id
 		`, body.Username, body.Email, passwordHash, verifyToken, verifyExpires, time.Now().UTC()).Scan(&id)
 		if err != nil {
-			// TODO: you can check for unique constraint on email and return 409
 			return c.Status(400).JSON(fiber.Map{"error": "could not create user"})
 		}
 
@@ -58,7 +66,6 @@ func RegisterHandler(db *sql.DB) fiber.Handler {
 		}
 
 		return c.Status(201).JSON(buildUserResponse(id, body.Username, body.Email, false, false))
-
 	}
 }
 

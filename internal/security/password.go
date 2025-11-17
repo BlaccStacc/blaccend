@@ -4,8 +4,10 @@ package security
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
+	"unicode"
 
 	//"github.com/BlaccStacc/blaccend/internal/security"
 	"golang.org/x/crypto/argon2"
@@ -18,6 +20,42 @@ const (
 	argonThreads = 4
 	argonKeyLen  = 32
 )
+
+func ValidatePasswordStrength(pw string) error {
+	if len(pw) < 8 {
+		return errors.New("Password must be at least 8 characters long")
+	}
+
+	var hasUpper, hasLower, hasNumber, hasSymbol bool
+
+	for _, c := range pw {
+		switch {
+		case unicode.IsUpper(c):
+			hasUpper = true
+		case unicode.IsLower(c):
+			hasLower = true
+		case unicode.IsDigit(c):
+			hasNumber = true
+		case unicode.IsPunct(c) || unicode.IsSymbol(c):
+			hasSymbol = true
+		}
+	}
+
+	if !hasUpper {
+		return errors.New("Password must contain at least one uppercase letter")
+	}
+	if !hasLower {
+		return errors.New("Password must contain at least one lowercase letter")
+	}
+	if !hasNumber {
+		return errors.New("Password must contain at least one number")
+	}
+	if !hasSymbol {
+		return errors.New("Password must contain at least one symbol")
+	}
+
+	return nil
+}
 
 func HashPassword(password string) (string, error) {
 	salt, err := NewRandomBytes(16)
