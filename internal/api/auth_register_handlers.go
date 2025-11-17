@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"log"
 	"time"
 
 	//"time"
@@ -34,18 +35,17 @@ func RegisterHandler(db *sql.DB) fiber.Handler {
 
 		var id int64
 		err = db.QueryRow(`
-			INSERT INTO users (username, email, password_hash, email_verified, verify_token, verify_expires_at)
-			VALUES ($1, $2, $3, FALSE, $4, $5)
+			INSERT INTO users (username, email, password_hash, email_verified, verify_token, verify_expires_at, date_registered)
+			VALUES ($1, $2, $3, FALSE, $4, $5, $6)
 			RETURNING id
-		`, body.Username, body.Email, passwordHash, verifyToken, verifyExpires).Scan(&id)
+		`, body.Username, body.Email, passwordHash, verifyToken, verifyExpires, time.Now().UTC()).Scan(&id)
 		if err != nil {
 			// TODO: you can check for unique constraint on email and return 409
 			return c.Status(400).JSON(fiber.Map{"error": "could not create user"})
 		}
 
 		if err := mail.SendVerificationEmail(body.Email, verifyToken); err != nil {
-			// you might still keep the user and just log this
-			// but for now return 500
+			log.Printf("SendVerificationEmail failed: %v", err)
 			return c.Status(500).JSON(fiber.Map{"error": "failed to send verification email"})
 		}
 
@@ -68,7 +68,7 @@ func VerifyEmailHandler(db *sql.DB) fiber.Handler {
 			    verify_token = NULL,
 			    verify_expires_at = NULL
 			WHERE verify_token = $1
-			  AND verify_expires_at > NOW()
+
 		`, token)
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{"error": "db error"})

@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-
+	//"github.com/BlaccStacc/blaccend/internal/mail"
 	"github.com/BlaccStacc/blaccend/internal/api"
 	"github.com/BlaccStacc/blaccend/internal/config"
 	"github.com/BlaccStacc/blaccend/internal/db"

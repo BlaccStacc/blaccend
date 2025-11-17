@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
   db:
@@ -12,7 +12,14 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./internal/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
-      - "5433:5432"  
+      - "5433:5432"
+
+  mailhog:
+    image: mailhog/mailhog
+    restart: always
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
 
   api:
     build:
@@ -20,6 +27,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - db
+      - mailhog
     environment:
       DB_HOST: db
       DB_PORT: 5432
@@ -27,6 +35,18 @@ services:
       DB_PASS: admin
       DB_NAME: firstdb
       APP_PORT: 8080
+
+      # app base URL (for links in emails)
+      APP_URL: http://localhost:5173
+
+      # SMTP config – api container talks to mailhog service
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_USER:
+      SMTP_PASS:
+      SMTP_FROM: "noreply@example.test"
+
+      JWT_SECRET: "super-dev-secret-change-me"
     ports:
       - "8080:8080"
     restart: always

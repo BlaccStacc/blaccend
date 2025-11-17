@@ -32,4 +32,5 @@ func RegisterRoutes(app *fiber.App, db *sql.DB) {
 
 	// /auth/me is a GET (used by frontend to fetch current user)
 	app.Get("/auth/me", MeHandler())
+	app.Get("/auth/verify-email", VerifyEmailHandler(db))
 }

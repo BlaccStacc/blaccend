@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS users (
     verify_token TEXT,
     verify_expires_at TIMESTAMPTZ,
     totp_secret TEXT,
-    twofa_enabled BOOLEAN NOT NULL DEFAULT FALSE
+    twofa_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    date_registered TIMESTAMPTZ NOT NULL,
+    last_seen TIMESTAMPTZ DEFAULT NULL
 );
 
 -- Optional sample users (these won't have usable passwords, just demo data)
