@@ -9,7 +9,6 @@ import (
 type Config struct {
 	Port string
 
-	// Database
 	DBURL  string
 	DBHost string
 	DBPort string
@@ -17,50 +16,61 @@ type Config struct {
 	DBPass string
 	DBName string
 
-	// JWT / security
-	JWTSecret string
-	AppURL    string // e.g. https://yourapp.com (used for email verification links)
+	StorageEndpoint  string
+	StorageRegion    string
+	StorageAccessKey string
+	StorageSecretKey string
+	StorageBucket    string
 
-	// SMTP email
+	JWTSecret string
+	AppURL    string
+
 	SMTPHost string
 	SMTPPort int
 	SMTPUser string
 	SMTPPass string
-	SMTPFrom string // FROM: noreply@yourapp.com
+	SMTPFrom string
+}
+
+var cfg *Config
+
+func Init() {
+	c := &Config{}
+
+	c.Port = getEnv("PORT", "8080")
+	c.AppURL = getEnv("APP_URL", "http://localhost:8080")
+
+	c.DBHost = getEnv("DB_HOST", "localhost")
+	c.DBPort = getEnv("DB_PORT", "5432")
+	c.DBUser = getEnv("DB_USER", "admin")
+	c.DBPass = getEnv("DB_PASS", "admin")
+	c.DBName = getEnv("DB_NAME", "firstdb")
+
+	c.StorageEndpoint = getEnv("S3_ENDPOINT", "http://garage:3900")
+	c.StorageRegion = getEnv("S3_REGION", "garage")
+	c.StorageAccessKey = getEnv("S3_ACCESS_KEY", "admin-token")
+	c.StorageSecretKey = getEnv("S3_SECRET_KEY", "admin-token")
+	c.StorageBucket = getEnv("S3_BUCKET", "app")
+
+	c.DBURL = getEnv("DB_URL",
+		fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+			c.DBUser, c.DBPass, c.DBHost, c.DBPort, c.DBName),
+	)
+
+	c.JWTSecret = getEnv("JWT_SECRET", "dev-secret-change-me")
+
+	c.SMTPHost = getEnv("SMTP_HOST", "localhost")
+	c.SMTPUser = getEnv("SMTP_USER", "")
+	c.SMTPPass = getEnv("SMTP_PASS", "")
+	c.SMTPFrom = getEnv("SMTP_FROM", "noreply@example.com")
+
+	smtpPortStr := getEnv("SMTP_PORT", "1025")
+	c.SMTPPort, _ = strconv.Atoi(smtpPortStr)
+
+	cfg = c
 }
 
 func Load() *Config {
-	cfg := &Config{}
-
-	// App settings
-	cfg.Port = getEnv("PORT", "8080")
-	cfg.AppURL = getEnv("APP_URL", "http://localhost:8080")
-
-	// DB settings
-	cfg.DBHost = getEnv("DB_HOST", "localhost")
-	cfg.DBPort = getEnv("DB_PORT", "5432")
-	cfg.DBUser = getEnv("DB_USER", "admin")
-	cfg.DBPass = getEnv("DB_PASS", "admin")
-	cfg.DBName = getEnv("DB_NAME", "firstdb")
-
-	// DB URL (can override the above entirely)
-	cfg.DBURL = getEnv("DB_URL",
-		fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
-			cfg.DBUser, cfg.DBPass, cfg.DBHost, cfg.DBPort, cfg.DBName),
-	)
-
-	// JWT
-	cfg.JWTSecret = getEnv("JWT_SECRET", "dev-secret-change-me")
-
-	// SMTP
-	cfg.SMTPHost = getEnv("SMTP_HOST", "localhost")
-	cfg.SMTPUser = getEnv("SMTP_USER", "")
-	cfg.SMTPPass = getEnv("SMTP_PASS", "")
-	cfg.SMTPFrom = getEnv("SMTP_FROM", "noreply@example.com")
-
-	smtpPortStr := getEnv("SMTP_PORT", "1025")
-	cfg.SMTPPort, _ = strconv.Atoi(smtpPortStr)
-
 	return cfg
 }
 

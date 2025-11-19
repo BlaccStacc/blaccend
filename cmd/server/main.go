@@ -2,14 +2,18 @@ package main
 
 import (
 	"log"
-	//"github.com/BlaccStacc/blaccend/internal/mail"
+
 	"github.com/BlaccStacc/blaccend/internal/api"
 	"github.com/BlaccStacc/blaccend/internal/config"
 	"github.com/BlaccStacc/blaccend/internal/db"
+	"github.com/BlaccStacc/blaccend/internal/storage"
+
 	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
+	config.Init()
+
 	cfg := config.Load()
 
 	// postgres connection?
@@ -19,6 +23,10 @@ func main() {
 	}
 	defer database.Close() // defer schedules a func to run after the surrounding func returns, no matter how
 	//basically defer runs last
+
+	if err := storage.Init(cfg); err != nil {
+    	log.Fatalf("storage init failed: %v", err)
+	}
 
 	// create fiber app ce pula mea e fiber- web framework pt go gen un fel de node.js lolz
 	app := fiber.New()

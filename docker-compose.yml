@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16
@@ -18,16 +16,44 @@ services:
     image: mailhog/mailhog
     restart: always
     ports:
-      - "1025:1025" # SMTP
-      - "8025:8025" # Web UI
+      - "1025:1025"
+      - "8025:8025"
 
+  garage:
+    image: dxflrs/garage:v2.0.0
+    container_name: garage
+    restart: unless-stopped
+    command: ["/garage", "server"]
+    volumes:
+      - ./internal/storage/garage.toml:/etc/garage.toml
+      - ./data:/var/lib/garage/data
+      - ./meta:/var/lib/garage/meta
+    ports:
+      - "3900:3900"
+      - "3901:3901"
+      - "3902:3902"
+      - "3903:3903"
+  
+  garage-webui:
+    image: khairul169/garage-webui:latest
+    container_name: garage-webui
+    restart: unless-stopped
+    volumes:
+      - ./internal/storage/garage.toml:/etc/garage.toml:ro
+    ports:
+      - 3909:3909
+    environment:
+      API_BASE_URL: "http://garage:3903"
+      S3_ENDPOINT_URL: "http://garage:3900"
+      GARAGE_ADMIN_TOKEN: "admin-token"
+      
   api:
     build:
       context: .
-      dockerfile: Dockerfile
     depends_on:
       - db
       - mailhog
+      - garage
     environment:
       DB_HOST: db
       DB_PORT: 5432
@@ -36,20 +62,20 @@ services:
       DB_NAME: firstdb
       APP_PORT: 8080
 
-      # app base URL (for links in emails)
       APP_URL: http://localhost:5173
 
-      # SMTP config – api container talks to mailhog service
       SMTP_HOST: mailhog
       SMTP_PORT: 1025
-      SMTP_USER:
-      SMTP_PASS:
       SMTP_FROM: "noreply@example.test"
 
-      JWT_SECRET: "super-dev-secret-change-me"
+      S3_ENDPOINT: garage:3900
+      S3_REGION: garage
+      S3_ACCESS_KEY: admin-token
+      S3_SECRET_KEY: admin-token
     ports:
       - "8080:8080"
     restart: always
 
 volumes:
   pgdata:
+  garage_data:
