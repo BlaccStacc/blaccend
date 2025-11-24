@@ -13,9 +13,25 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- Optional sample users (these won't have usable passwords, just demo data)
-INSERT INTO users (username, email)
-VALUES
-('alice', 'alice@example.com'),
-('bob', 'bob@example.com'),
-('carol', 'carol@example.com')
-ON CONFLICT DO NOTHING;
+
+-- =========================
+-- GARAGE STORAGE TABLES
+-- =========================
+
+CREATE TABLE IF NOT EXISTS garage_spaces (
+    id          BIGSERIAL PRIMARY KEY,
+    name        TEXT NOT NULL,
+    description TEXT,
+    location    TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS garage_items (
+    id          BIGSERIAL PRIMARY KEY,
+    space_id    BIGINT NOT NULL REFERENCES garage_spaces(id) ON DELETE CASCADE,
+    name        TEXT NOT NULL,
+    quantity    INT NOT NULL DEFAULT 1,
+    notes       TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

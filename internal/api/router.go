@@ -11,7 +11,7 @@ func RegisterRoutes(app *fiber.App, db *sql.DB) {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "http://localhost:5173",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
-		AllowMethods: "GET,POST,OPTIONS",
+		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
 	}))
 
 	app.Get("/health", GetHealth)
@@ -31,7 +31,10 @@ func RegisterRoutes(app *fiber.App, db *sql.DB) {
 	protected := app.Group("", AuthMiddleware()) // require JWT
 	protected.Get("/auth/me", MeHandler())
 
-	// 🔹 NEW FOR TOTP SETUP (authenticator app)
+	// 🔹 TOTP setup (authenticator app)
 	protected.Get("/auth/2fa/setup", TwoFASetupHandler(db))
 	protected.Post("/auth/2fa/confirm", TwoFAConfirmHandler(db))
+
+	// 🔹 GARAGE STORAGE ROUTES (nou)
+	RegisterGarageRoutes(protected, db)
 }
